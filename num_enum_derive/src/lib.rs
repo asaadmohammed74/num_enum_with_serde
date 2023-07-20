@@ -633,6 +633,18 @@ pub fn derive_into_primitive(input: TokenStream) -> TokenStream {
                 #body
             }
         }
+        
+        impl serde::Serialize for #name {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                let id:#repr = self.clone().into();
+
+                #repr::serialize(&id, serializer)
+            }
+        }
+
     })
 }
 
@@ -733,6 +745,18 @@ pub fn derive_from_primitive(input: TokenStream) -> TokenStream {
 
         #[doc(hidden)]
         impl ::#krate::CannotDeriveBothFromPrimitiveAndTryFromPrimitive for #name {}
+
+
+        impl<'de> serde::Deserialize<'de> for #name {
+            fn deserialize<D>(deserializer: D) -> Result<#name, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                let id = #repr::deserialize(deserializer)?;
+
+                Ok(#name::from(id))
+            }
+        }
     })
 }
 
